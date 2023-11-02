@@ -45,5 +45,5 @@
   (let [trinary-number "112"
         decimal-equivalent (trinary-to-decimal trinary-number)]
     (println (str "The decimal equivalent of " trinary-number " is " decimal-equivalent)))
-  (println(translate_rna_to_amino_acids "AUGUUUUGG" ))
+  (println(translate_rna_to_amino_acids "123456789" ))
   )
