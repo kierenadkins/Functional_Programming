@@ -28,14 +28,23 @@
                       (partition 3) ;splits the rna string into a lazy sequence of characters eg (A U G) (A U G)
                       (map #(apply str %))  ;applies the fn "apply" onto the lazy sequence to create a new lazy sequence of strings ("AUG") ("AUG")
                       (map #(translate_codon_to_protein %)) ;applies the fn translate_codon_to_protein which returns the proteins
-                      (take-while #(not= % "STOP"))         ;Although not a complete copy, i got this code from https://stackoverflow.com/questions/11866446/how-to-stop-iterating-a-sequence-when-a-condition-is-met and used the clojure cheatsheet to further understand how it works and apply it to this program
+                      (take-while #(not= "STOP" %))         ;Although not a complete copy, i got this code from https://stackoverflow.com/questions/11866446/how-to-stop-iterating-a-sequence-when-a-condition-is-met and used the clojure cheatsheet to further understand how it works and apply it to this program
                       )]
-    result
-  )
-  )
-;Is there a better way instead of an if statement?
-;is there a way i can do a similar thing within the thread?
+    result))
 
+;task 3
+
+;Figure out how to read from a file and parse it
+
+;1.	Which year saw the most individual meteor falls?
+
+;2.	Which year saw the heaviest collective meteor fall?
+
+;3.	How many years since the first recorded meteorite and the last
+
+;4.
+
+;5.
 (defn -main []
   (let [trinary-number "112"
         decimal-equivalent (trinary-to-decimal trinary-number)]
