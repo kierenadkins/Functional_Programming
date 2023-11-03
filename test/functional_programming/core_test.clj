@@ -80,7 +80,8 @@
   (is (= (translate_rna_to_amino_acids "UGGUAGUGG") '("Tryptophan")))
   (testing "Will Return A Lazy Sequence")
   (is true (instance? LazySeq (translate_rna_to_amino_acids "AUG")))
-  (is true (instance? LazySeq (translate_rna_to_amino_acids "UAA"))))
+  (is true (instance? LazySeq (translate_rna_to_amino_acids "UAA")))
+  (is true (instance? LazySeq (translate_rna_to_amino_acids "AUGUUUUGG"))))
 
 
 

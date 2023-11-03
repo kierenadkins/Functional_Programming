@@ -28,18 +28,17 @@
                       (partition 3) ;splits the rna string into a lazy sequence of characters eg (A U G) (A U G)
                       (map #(apply str %))  ;applies the fn "apply" onto the lazy sequence to create a new lazy sequence of strings ("AUG") ("AUG")
                       (map #(translate_codon_to_protein %)) ;applies the fn translate_codon_to_protein which returns the proteins
+                      (take-while #(not= % "STOP"))         ;Although not a complete copy, i got this code from https://stackoverflow.com/questions/11866446/how-to-stop-iterating-a-sequence-when-a-condition-is-met and used the clojure cheatsheet to further understand how it works and apply it to this program
                       )]
-    (if (not-any? #(= "STOP" %) result)                     ;checks if no sequence exists with "STOP" and returns sequence if true
-      result
-      (empty result))                                       ;Empties sequence as it is invalid
-    )
+    result
+  )
   )
 ;Is there a better way instead of an if statement?
 ;is there a way i can do a similar thing within the thread?
 
 (defn -main []
-  (let [trinary-number "333"
+  (let [trinary-number "112"
         decimal-equivalent (trinary-to-decimal trinary-number)]
     (println (str "The decimal equivalent of " trinary-number " is " decimal-equivalent)))
-  (println(translate_rna_to_amino_acids "AUG" ))
+  (println(translate_rna_to_amino_acids "AUGUUUUGG" ))
   )
