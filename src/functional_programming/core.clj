@@ -2,15 +2,11 @@
   (:gen-class))
 
 ;Task One
-(defn str-to-sequence-of-ints
-  [string]
-  (map #(Character/getNumericValue %) string)) ; https://stackoverflow.com/questions/4836768/create-a-list-from-a-string-in-clojure
-
 (defn trinary-to-decimal  ([trinary-str]
-  (if (re-matches #"^[0-2]+" trinary-str) ;Matches agaisnt string containing multiple characters but all must be 0, 1 or 2.
+  (if (re-matches #"^[0-2]+" trinary-str) ;Matches against string containing multiple characters but all must be 0, 1 or 2.
     (trinary-to-decimal
       (->> trinary-str
-           (str-to-sequence-of-ints)
+           (map #(Character/getNumericValue %));code to convert string to numbers is found here https://stackoverflow.com/questions/4836768/create-a-list-from-a-string-in-clojure
            (reverse))
       0 0) ;calls the recursive trinary method with a reversed vector of ints which match the string
     0))
@@ -42,7 +38,7 @@
 ;is there a way i can do a similar thing within the thread?
 
 (defn -main []
-  (let [trinary-number "112"
+  (let [trinary-number "333"
         decimal-equivalent (trinary-to-decimal trinary-number)]
     (println (str "The decimal equivalent of " trinary-number " is " decimal-equivalent)))
   (println(translate_rna_to_amino_acids "123456789" ))
