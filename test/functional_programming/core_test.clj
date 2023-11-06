@@ -81,7 +81,14 @@
   (testing "Will Return A Lazy Sequence")
   (is true (instance? LazySeq (convert-rna-sequence-to-amino-acids "AUG")))
   (is true (instance? LazySeq (convert-rna-sequence-to-amino-acids "UAA")))
-  (is true (instance? LazySeq (convert-rna-sequence-to-amino-acids "AUGUUUUGG"))))
+  (is true (instance? LazySeq (convert-rna-sequence-to-amino-acids "AUGUUUUGG")))
+  (testing "Invalid Types")
+  (is (= (convert-rna-sequence-to-amino-acids 1) 0))
+  (is (= (convert-rna-sequence-to-amino-acids 1.000) 0))
+  (is (= (convert-rna-sequence-to-amino-acids 'a') 0))
+  (is (= (convert-rna-sequence-to-amino-acids (vector [1 2 3 4])) 0))
+  (is (= (convert-rna-sequence-to-amino-acids "hdbshdbdshdbshdsbhdsbsdhdsbhdsbh") '()))
+  )
 
 
 
