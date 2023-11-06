@@ -32,7 +32,7 @@
   (is (= 0 (convert-trinary-to-decimal 1)))
   (is (= 0 (convert-trinary-to-decimal 1.0)))
   (is (= 0 (convert-trinary-to-decimal 1/3)))
-  (is (= 0 (convert-trinary-to-decimal [1 2 3])))
+  (is (= 0 (convert-trinary-to-decimal [1 2 3]))))
 
 (deftest test-convert-trinary-to-decimal
   ;Tests can be validated using the trinary to decimal calculator here https://www.epochconverter.com/numbers/bin-oct-dec-hex
