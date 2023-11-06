@@ -5,17 +5,45 @@
 
 ;(ACTUAL, EXPECTED)
 ;Task One Tests
+(deftest test-convert-trinary-to-decimal-recursive
+  ;Tests can be validated using the trinary to decimal calculator here https://www.epochconverter.com/numbers/bin-oct-dec-hex
+  (testing "Trinary Conversions tests")
+    (is (= 0 (convert-trinary-to-decimal-recursive "0")))
+    (is (= 1 (convert-trinary-to-decimal-recursive "1")))
+    (is (= 3 (convert-trinary-to-decimal-recursive "10")))
+    (is (= 14 (convert-trinary-to-decimal-recursive "112")))
+    (is (= 563 (convert-trinary-to-decimal-recursive "202212")))
+    (is (= 32091 (convert-trinary-to-decimal-recursive "1122000120"))
+    (is (= true (int? (convert-trinary-to-decimal-recursive "1122000120")))))
+
+  (testing "Invalid Inputs")
+  (is (= 0 (convert-trinary-to-decimal-recursive "   ")))
+  (is (= 0 (convert-trinary-to-decimal-recursive "")))
+  (is (= 0 (convert-trinary-to-decimal-recursive "333")))
+  (is (= 0 (convert-trinary-to-decimal-recursive "4")))
+  (is (= 0 (convert-trinary-to-decimal-recursive "5")))
+  (is (= 0 (convert-trinary-to-decimal-recursive "6")))
+  (is (= 0 (convert-trinary-to-decimal-recursive "7")))
+  (is (= 0 (convert-trinary-to-decimal-recursive "8")))
+  (is (= 0 (convert-trinary-to-decimal-recursive "9")))
+  (is (= 0 (convert-trinary-to-decimal-recursive "11220080120")))
+  (is (= 0 (convert-trinary-to-decimal-recursive "abc")))
+  (is (= 0 (convert-trinary-to-decimal-recursive "v")))
+  (is (= 0 (convert-trinary-to-decimal 1)))
+  (is (= 0 (convert-trinary-to-decimal 1.0)))
+  (is (= 0 (convert-trinary-to-decimal 1/3)))
+  (is (= 0 (convert-trinary-to-decimal [1 2 3])))
+
 (deftest test-convert-trinary-to-decimal
   ;Tests can be validated using the trinary to decimal calculator here https://www.epochconverter.com/numbers/bin-oct-dec-hex
   (testing "Trinary Conversions tests")
-    (is (= 0 (convert-trinary-to-decimal "0")))
-    (is (= 1 (convert-trinary-to-decimal "1")))
-    (is (= 3 (convert-trinary-to-decimal "10")))
-    (is (= 14 (convert-trinary-to-decimal "112")))
-    (is (= 563 (convert-trinary-to-decimal "202212")))
-    (is (= 32091 (convert-trinary-to-decimal "1122000120"))
-    (is (= true (int? (convert-trinary-to-decimal "1122000120")))))
-
+  (is (= 0 (convert-trinary-to-decimal "0")))
+  (is (= 1 (convert-trinary-to-decimal "1")))
+  (is (= 3 (convert-trinary-to-decimal "10")))
+  (is (= 14 (convert-trinary-to-decimal "112")))
+  (is (= 563 (convert-trinary-to-decimal "202212")))
+  (is (= 32091 (convert-trinary-to-decimal "1122000120"))
+      (is (= true (int? (convert-trinary-to-decimal "1122000120")))))
   (testing "Invalid Inputs")
   (is (= 0 (convert-trinary-to-decimal "   ")))
   (is (= 0 (convert-trinary-to-decimal "")))
@@ -28,7 +56,14 @@
   (is (= 0 (convert-trinary-to-decimal "9")))
   (is (= 0 (convert-trinary-to-decimal "11220080120")))
   (is (= 0 (convert-trinary-to-decimal "abc")))
-  (is (= 0 (convert-trinary-to-decimal "v"))))
+  (is (= 0 (convert-trinary-to-decimal "v")))
+  (is (= 0 (convert-trinary-to-decimal 1)))
+  (is (= 0 (convert-trinary-to-decimal 1.0)))
+  (is (= 0 (convert-trinary-to-decimal 1/3)))
+  (is (= 0 (convert-trinary-to-decimal [1 2 3])))
+  )
+
+
 
 ;Task Two Tests
 (deftest test-translate-codon-to-protein
