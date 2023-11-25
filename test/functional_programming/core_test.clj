@@ -45,6 +45,7 @@
   (is (= 32091 (convert-trinary-to-decimal "1122000120"))
       (is (= true (int? (convert-trinary-to-decimal "1122000120")))))
   (testing "Invalid Inputs")
+  ;invalid trinary inputs should always return 0
   (is (= 0 (convert-trinary-to-decimal "   ")))
   (is (= 0 (convert-trinary-to-decimal "")))
   (is (= 0 (convert-trinary-to-decimal "333")))
@@ -90,6 +91,7 @@
 
 (deftest test_convert-rna-sequence-to-amino-acids
   (testing "Simple Conversions")
+  ;Valid conversions should always return a lazy sequence of proteins
   (is (= (convert-rna-sequence-to-amino-acids "AUG") '("Methionine")))
   (is (= (convert-rna-sequence-to-amino-acids "UUU") '("Phenylalanine")))
   (is (= (convert-rna-sequence-to-amino-acids "UUC") '("Phenylalanine")))
@@ -118,10 +120,11 @@
   (is true (instance? LazySeq (convert-rna-sequence-to-amino-acids "UAA")))
   (is true (instance? LazySeq (convert-rna-sequence-to-amino-acids "AUGUUUUGG")))
   (testing "Invalid Types")
-  (is (= (convert-rna-sequence-to-amino-acids 1) 0))
-  (is (= (convert-rna-sequence-to-amino-acids 1.000) 0))
-  (is (= (convert-rna-sequence-to-amino-acids 'a') 0))
-  (is (= (convert-rna-sequence-to-amino-acids (vector [1 2 3 4])) 0))
+  ;should always return a empty lazy seq
+  (is (= (convert-rna-sequence-to-amino-acids 1) '()))
+  (is (= (convert-rna-sequence-to-amino-acids 1.000) '()))
+  (is (= (convert-rna-sequence-to-amino-acids 'a') '()))
+  (is (= (convert-rna-sequence-to-amino-acids (vector [1 2 3 4])) '()))
   (is (= (convert-rna-sequence-to-amino-acids "hdbshdbdshdbshdsbhdsbsdhdsbhdsbh") '()))
   )
 
