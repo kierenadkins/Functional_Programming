@@ -168,14 +168,23 @@
 (println(most-individual-meteor-falls-in-year "nasa.json"))
 ;2.	Which year saw the heaviest collective meteor fall? Continue on this
 
-(defn heaviest-collective [path]
-  (->> (read-input path)
-       (map #(select-keys % [:year :mass]))
-       (map #(update % :year format-date))
-       (map #(update % :mass format-mass))
-       (group-by :year)))
+(defn heaviest-collective-fall [path]
+  (let [data (read-input path)
+        yearsmass (->> data
+                       (filter #(and (some? (:year %)) (some? (:mass %)))) ;Filter all records that dont have both a year and a mass
+                       (map #(update % :year format-date))  ;format date into a year
+                       (map #(update % :mass format-mass))  ;format mass into a double
+                       (reduce (fn [m d]                    ;reduce into a new map and go through each col of the previous map
+                                 (if (find m (:year d))     ;checks if the year from the col is in the new map
+                                   (assoc m (:year d) (+ (get m (:year d)) (:mass d) ) ) ;if so then we replace the value with the same year but with a combination of both masses
+                                 (assoc m (:year d) (:mass d)))) ;add the data to the new map
+                               {})
+                       (sort-by val)                        ;sort by the value on each key
+                       )]
+     (last yearsmass)))                                     ;return last result as that will be the biggest
 
-  (println(heaviest-collective "nasa.json"))
+(println(heaviest-collective-fall "nasa.json"))
+
 ;3.	How many years since the first recorded meteorite and the last
 (defn years-since [path]
   (let [data (read-input path)
