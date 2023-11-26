@@ -130,39 +130,61 @@
 
 ;https://stackoverflow.com/questions/45854023/add-values-of-similar-json
 (defn read-input [path]
+  (try
   (json/read-str (slurp path)
                  :key-fn keyword
                  :value-fn (fn [k v]
                              (if (= k :date)
                                (java.sql.Date/valueOf v)
                                 v)))
+  (catch Exception e
+    (println "Exception caught:" (.getMessage e)))
+  (finally
+    nil)
+  )
   )
 
 ;https://stackoverflow.com/questions/18125045/clojure-parse-string-to-date
 (defn format-date [x]
-  (let [date (get x :year)]
-    (when date                                              ;Ensures date is not nil
+    (when x                                              ;Ensures date is not nil
       (.format
         (java.text.SimpleDateFormat. "yyyy")
         (.parse
-          (java.text.SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS") date)))))
+          (java.text.SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS") x))))
+
+(defn format-mass [x]
+  (when x                                              ;Ensures date is not nil
+    (Double/parseDouble x)))
 
 ;1.	Which year saw the most individual meteor falls?
 (defn most-individual-meteor-falls-in-year [path]
 (->> (read-input path)
-     (map #(select-keys % [:year]))
-     (map #(format-date %))
-     (frequencies)
-     (apply max-key val)
+     (filter #(some? (:year %)))                            ;filters to give us a sequence of maps containing the keyword :year
+     (map #(format-date (get % :year)))                     ;coverts into lazy sequence of years
+     (frequencies)                                          ;converts back into a map using the year as a key and the amount of times it has appeared as the value
+     (apply max-key val)                                    ;We then apply max-key to find the key with the highest appearance
      ))
 
 (println(most-individual-meteor-falls-in-year "nasa.json"))
-;2.	Which year saw the heaviest collective meteor fall?
+;2.	Which year saw the heaviest collective meteor fall? Continue on this
 
+(defn heaviest-collective [path]
+  (->> (read-input path)
+       (map #(select-keys % [:year :mass]))
+       (map #(update % :year format-date))
+       (map #(update % :mass format-mass))
+       (group-by :year)))
 
-
+  (println(heaviest-collective "nasa.json"))
 ;3.	How many years since the first recorded meteorite and the last
+(defn years-since [path]
+  (let [data (read-input path)
+        years (->> data
+                   (filter #(some? (:year %)))              ;returns a sequence of maps where the keyword :Year is within the map
+                   (map #(Integer/parseInt (format-date (:year %)))))] ;extracts the year and formats to year, apply parse int resulting in a sequence of intergers
+    (- (apply max years) (apply min years))))               ;as we have a sequence of ints we can use apply to find the largest and smallest number
 
+(println(years-since "nasa.json"))
 ;4. What meteor is the heaviest
 
 ;5. which meteor type is the heaviest on average
