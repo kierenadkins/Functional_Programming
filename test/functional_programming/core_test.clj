@@ -92,42 +92,82 @@
 (deftest test_convert-rna-sequence-to-amino-acids
   (testing "Simple Conversions")
   ;Valid conversions should always return a lazy sequence of proteins
-  (is (= (convert-rna-sequence-to-amino-acids "AUG") '("Methionine")))
-  (is (= (convert-rna-sequence-to-amino-acids "UUU") '("Phenylalanine")))
-  (is (= (convert-rna-sequence-to-amino-acids "UUC") '("Phenylalanine")))
-  (is (= (convert-rna-sequence-to-amino-acids "UUA") '("Leucine")))
-  (is (= (convert-rna-sequence-to-amino-acids "UUG") '("Leucine")))
-  (is (= (convert-rna-sequence-to-amino-acids "UCU") '("Serine")))
-  (is (= (convert-rna-sequence-to-amino-acids "UCC") '("Serine")))
-  (is (= (convert-rna-sequence-to-amino-acids "UCA") '("Serine")))
-  (is (= (convert-rna-sequence-to-amino-acids "UCG") '("Serine")))
-  (is (= (convert-rna-sequence-to-amino-acids "UAU") '("Tyrosine")))
-  (is (= (convert-rna-sequence-to-amino-acids "UAC") '("Tyrosine")))
-  (is (= (convert-rna-sequence-to-amino-acids "UGU") '("Cysteine")))
-  (is (= (convert-rna-sequence-to-amino-acids "UGC") '("Cysteine")))
-  (is (= (convert-rna-sequence-to-amino-acids "UGG") '("Tryptophan")))
-  (is (= (convert-rna-sequence-to-amino-acids "UAA") '()))
-  (is (= (convert-rna-sequence-to-amino-acids "UAG") '()))
-  (is (= (convert-rna-sequence-to-amino-acids "UGA") '()))
+  (is (= '("Methionine") (convert-rna-sequence-to-amino-acids "AUG")))
+  (is (= '("Phenylalanine") (convert-rna-sequence-to-amino-acids "UUU")))
+  (is (= '("Phenylalanine") (convert-rna-sequence-to-amino-acids "UUC")))
+  (is (= '("Leucine") (convert-rna-sequence-to-amino-acids "UUA")))
+  (is (= '("Leucine") (convert-rna-sequence-to-amino-acids "UUG")))
+  (is (= '("Serine") (convert-rna-sequence-to-amino-acids "UCU")))
+  (is (= '("Serine") (convert-rna-sequence-to-amino-acids "UCC")))
+  (is (= '("Serine") (convert-rna-sequence-to-amino-acids "UCA")))
+  (is (= '("Serine") (convert-rna-sequence-to-amino-acids "UCG")))
+  (is (= '("Tyrosine") (convert-rna-sequence-to-amino-acids "UAU")))
+  (is (= '("Tyrosine")(convert-rna-sequence-to-amino-acids "UAC")))
+  (is (= '("Cysteine") (convert-rna-sequence-to-amino-acids "UGU")))
+  (is (= '("Cysteine") (convert-rna-sequence-to-amino-acids "UGC")))
+  (is (= '("Tryptophan") (convert-rna-sequence-to-amino-acids "UGG")))
+  (is (= '() (convert-rna-sequence-to-amino-acids "UAA")))
+  (is (= '() (convert-rna-sequence-to-amino-acids "UAG")))
+  (is (= '() (convert-rna-sequence-to-amino-acids "UGA")))
   (testing "Complex Proteins")
-  (is (= (convert-rna-sequence-to-amino-acids "AUGUUUUGG") '("Methionine" "Phenylalanine" "Tryptophan")))
-  (is (= (convert-rna-sequence-to-amino-acids "UAGUGG") '()))
-  (is (= (convert-rna-sequence-to-amino-acids "UGGUAG") '("Tryptophan")))
-  (is (= (convert-rna-sequence-to-amino-acids "AUGUUUUAA") '("Methionine" "Phenylalanine")))
-  (is (= (convert-rna-sequence-to-amino-acids "UGGUAGUGG") '("Tryptophan")))
+  (is (= '("Methionine" "Phenylalanine" "Tryptophan") (convert-rna-sequence-to-amino-acids "AUGUUUUGG")))
+  (is (= '() (convert-rna-sequence-to-amino-acids "UAGUGG")))
+  (is (= '("Tryptophan") (convert-rna-sequence-to-amino-acids "UGGUAG")))
+  (is (= '("Methionine" "Phenylalanine") (convert-rna-sequence-to-amino-acids "AUGUUUUAA")))
+  (is (= '("Tryptophan") (convert-rna-sequence-to-amino-acids "UGGUAGUGG")))
   (testing "Will Return A Lazy Sequence")
   (is true (instance? LazySeq (convert-rna-sequence-to-amino-acids "AUG")))
   (is true (instance? LazySeq (convert-rna-sequence-to-amino-acids "UAA")))
   (is true (instance? LazySeq (convert-rna-sequence-to-amino-acids "AUGUUUUGG")))
   (testing "Invalid Types")
   ;should always return a empty lazy seq
-  (is (= (convert-rna-sequence-to-amino-acids 1) '()))
-  (is (= (convert-rna-sequence-to-amino-acids 1.000) '()))
-  (is (= (convert-rna-sequence-to-amino-acids 'a') '()))
-  (is (= (convert-rna-sequence-to-amino-acids (vector [1 2 3 4])) '()))
-  (is (= (convert-rna-sequence-to-amino-acids "hdbshdbdshdbshdsbhdsbsdhdsbhdsbh") '()))
+  (is (= '() (convert-rna-sequence-to-amino-acids 1)))
+  (is (= '() (convert-rna-sequence-to-amino-acids 1.000)))
+  (is (= '() (convert-rna-sequence-to-amino-acids 'a')))
+  (is (= '() (convert-rna-sequence-to-amino-acids (vector [1 2 3 4]))))
+  (is (= '() (convert-rna-sequence-to-amino-acids "hdbshdbdshdbshdsbhdsbsdhdsbhdsbh")))
   )
 
+(deftest test-read-input
+  (testing "Valid JSON file"
+    (is (not (nil? (read-input "testData.json")))))
+  (testing "Invalid Json File"
+    ;i couldnt find a way to do this
+    )
+  )
+
+(deftest test-most-individual-meteor-falls-in-year
+  (testing "Most individual falls using test data"
+    (is (= (most-individual-meteor-falls-in-year "testData.json") ["1949" 4])))
+  (testing "Most individual falls using real data"
+    (is (= (most-individual-meteor-falls-in-year "nasa.json") ["1933" 16])))
+  (testing "Function returns a vector using test data"
+    (is (most-individual-meteor-falls-in-year "testData.json") vector?))
+  (testing "Function returns a vector using real data"
+    (is (most-individual-meteor-falls-in-year "nasa.json") vector?)))
+
+(deftest test-heaviest-collective-fall
+  (testing "Most heaviest collective falling using test data"
+    (is (= (heaviest-collective-fall "testData.json") ["1981" 112000.0])))
+  (testing "Most heaviest collective falling using real data"
+    (is (= (heaviest-collective-fall "nasa.json") ["1947" 2.303023E7])))
+  (testing "Function returns a vector using test data"
+    (is (heaviest-collective-fall "testData.json") vector?))
+  (testing "Function returns a vector using real data"
+    (is (heaviest-collective-fall "nasa.json") vector?)))
+
+(deftest test-years-between-first-and-last
+  (testing "The amount of years between earilest recording and latest using test data"
+    (is (= (years-between-first-and-last "testData.json") 236)))
+  (testing "The amount of years between earilest recording and latest using real data"
+    (is (= (years-between-first-and-last "nasa.json") 1152)))
+  (testing "Function returns a int using test data"
+    (is (years-between-first-and-last "testData.json") int?))
+  (testing "Function returns a int using real data"
+    (is (years-between-first-and-last "nasa.json") int?)))
 
 
-;do i want to test extra data types here?
+
+
+
+

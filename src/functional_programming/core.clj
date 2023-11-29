@@ -10,7 +10,7 @@
 ;I have done two solutions to task one
 
 ;a reusable function for both which checks if we pass in a string and then checks the string agaisnt our pattern [retired]
-(s/def :trinary/matches-pattern (s/and #(string? %) #(re-matches #"^[0-2]+" %)))
+(s/def ::trinary-matches-pattern (s/and #(string? %) #(re-matches #"^[0-2]+" %)))
 
 ;Task one version 1
 ;For this i use the power of recursive. I first check the string using regex to ensure that we only have 0 1 and 2, returning 0 if not, this covers invalid types
@@ -19,7 +19,7 @@
 ;we pass in the reversed mapped lazy sequence and perform our logic on it in a recursive way.
 
 (defn convert-trinary-to-decimal-recursive  ([trinary-str]
-  (if (s/valid? :trinary/matches-pattern trinary-str) ;Matches against string containing multiple characters but all must be 0, 1 or 2.
+  (if (s/valid? ::trinary-matches-pattern trinary-str) ;Matches against string containing multiple characters but all must be 0, 1 or 2.
     (convert-trinary-to-decimal-recursive
       (reverse (map #(Character/getNumericValue %) trinary-str)) ;pass each character in and map each character to an int and reverse the lazy sequence.
       0 0) ;calls the recursive trinary method with a reversed lazy sequence of ints
@@ -42,7 +42,7 @@
 ;to add these together we use the reduce
 ;we then use the higher order function reduce to add all the results together
 (defn convert-trinary-to-decimal [trinary-str]
-  (if (s/valid? :trinary/matches-pattern trinary-str) ;Matches against string containing multiple characters but all must be 0, 1 or 2.
+  (if (s/valid? ::trinary-matches-pattern trinary-str) ;Matches against string containing multiple characters but all must be 0, 1 or 2.
   (->> trinary-str
        (map (fn [param1] (Character/getNumericValue param1)));code to convert string to lazy sequence of numbers code is found here https://stackoverflow.com/questions/34985202/character-to-integer-in-clojure
        (reverse)
@@ -85,8 +85,8 @@
     (get codon-to-protein-map (keyword codon)))) ;converts the string into a keyword which is used to get the value from the map
 
 ;specifies a protein that is not equal to "STOP" or nil
-(s/def :protein/not-stop-not-nil? (s/and #(not= "STOP" %) #(not= nil %)))
-(s/def :rna-sequence/string? string?)
+(s/def ::protein-not-stop-not-nil? (s/and #(not= "STOP" %) #(not= nil %)))
+(s/def ::rna-sequence-string? string?)
 
 ;This function effectively splits the rna-sequence into a lazy sequence of characters, before using the map function
 ;to apply the function "apply str" to each col of the lazy sequence to turn the 3 characters into a codon
@@ -94,12 +94,12 @@
 ;finally we use the take-while to only return the lazy sequence which contains codons until the "Stop"
 (defn convert-rna-sequence-to-amino-acids [rna-sequence]
   ;Equivalent to (map #(convert-codon-to-protein %) (map #(apply str %) (partition 3 rna)))
-  (if (s/valid? :rna-sequence/string? rna-sequence)
+  (if (s/valid? ::rna-sequence-string? rna-sequence)
     (let  [amino-acids ( ->> rna-sequence           ;threads the last arugmenet to each function
                       (partition 3) ;splits the rna string into a lazy sequence of characters eg (A U G) (A U G)
                       (map #(apply str %))  ;applies the fn "apply" onto the lazy sequence to create a new lazy sequence of strings ("AUG") ("AUG")
                       (map #(convert-codon-to-protein %)))] ;applies the fn convert-codon-to-protein which returns the proteins
-      (take-while #(s/valid? :protein/not-stop-not-nil? %) amino-acids) ;Although not a complete copy, i got this code "Take-While" from https://stackoverflow.com/questions/11866446/how-to-stop-iterating-a-sequence-when-a-condition-is-met and used the clojure cheatsheet to further understand how it works and apply it to this program alongside adding spec/5
+      (take-while #(s/valid? ::protein-not-stop-not-nil? %) amino-acids) ;Although not a complete copy, i got this code "Take-While" from https://stackoverflow.com/questions/11866446/how-to-stop-iterating-a-sequence-when-a-condition-is-met and used the clojure cheatsheet to further understand how it works and apply it to this program alongside adding spec/5
       )
     '()                                                     ; this may not be the best way of returning a empty sequence
   )
@@ -108,13 +108,13 @@
 ;Task 2 version 2
 ;I wanted to explore the use of looping and recuring.
 (defn convert-rna-sequence-to-amino-acids2 [rna-sequence]
-  (if (s/valid? :rna-sequence/string? rna-sequence)         ; uses spec to check if the input in a valid string
+  (if (s/valid? ::rna-sequence-string? rna-sequence)         ; uses spec to check if the input in a valid string
     (let [rna-sequence (map #(apply str %) (partition 3 rna-sequence))] ;define our scope, and convert the rna into a lazyseq of codons of three characters which are converted into a string
       (loop [index 0 proteins []]                           ;we not loop though each column of the sequence and store the protein
          (if (and  (= index (count rna-sequence)))          ;Stop condition if the index becomes larger than our sequence
            (lazy-seq proteins)                              ;If true return a lazyseq of our proteins
              (let [protein (convert-codon-to-protein (nth rna-sequence index))] ;Use a let to define a new scope which calls our function with the protein in index x, this scope will then handle validation and recursion
-                (if (s/valid? :protein/not-stop-not-nil? protein) ;checks if the protein is "STOP" or "Nil" (Nil is incase we get an invalid codon)
+                (if (s/valid? ::protein-not-stop-not-nil? protein) ;checks if the protein is "STOP" or "Nil" (Nil is incase we get an invalid codon)
                   (recur (inc index) (conj proteins (convert-codon-to-protein (nth rna-sequence index)))) ; if valid we can recur, by increasing index and adding protein to proteins
                   (lazy-seq proteins))))))))                ;if stop or nil we can return the sequence
 
@@ -126,23 +126,20 @@
 
 ;task 3
 
-;Figure out how to read from a file and parse it
-
+(s/def ::path-matches-pattern-and-is-string? (s/and #(string? %) #(re-matches #"(.*?)\.(json)$" %)))
 ;https://stackoverflow.com/questions/45854023/add-values-of-similar-json
+;Figure out how to read from a file and parse it
 (defn read-input [path]
+  ;{:pre [(::path-matches-pattern-and-is-string? path)]}
   (try
-  (json/read-str (slurp path)
-                 :key-fn keyword
-                 :value-fn (fn [k v]
-                             (if (= k :date)
-                               (java.sql.Date/valueOf v)
-                                v)))
-  (catch Exception e
-    (println "Exception caught:" (.getMessage e)))
-  (finally
-    nil)
-  )
-  )
+    (json/read-str (slurp path)
+                   :key-fn keyword
+                   :value-fn (fn [k v]
+                               (if (= k :date)
+                                 (java.sql.Date/valueOf v)
+                                 v)))
+    (catch Exception e
+      (println "Exception caught:" (.getMessage e)))))
 
 ;https://stackoverflow.com/questions/18125045/clojure-parse-string-to-date
 (defn format-date [x]
@@ -157,17 +154,18 @@
     (Double/parseDouble x)))
 
 ;1.	Which year saw the most individual meteor falls?
+(s/def ::keyword-year? (s/keys :req [::year]))
 (defn most-individual-meteor-falls-in-year [path]
 (->> (read-input path)
-     (filter #(some? (:year %)))                            ;filters to give us a sequence of maps containing the keyword :year
+     (filter #(s/conform ::keyword-year? %))                            ;filters to give us a sequence of maps containing the keyword :year
      (map #(format-date (get % :year)))                     ;coverts into lazy sequence of years
      (frequencies)                                          ;converts back into a map using the year as a key and the amount of times it has appeared as the value
      (apply max-key val)                                    ;We then apply max-key to find the key with the highest appearance
      ))
 
-(println(most-individual-meteor-falls-in-year "nasa.json"))
-;2.	Which year saw the heaviest collective meteor fall? Continue on this
+(println (most-individual-meteor-falls-in-year "nasa.json"))
 
+;2.	Which year saw the heaviest collective meteor fall? Continue on this
 (defn heaviest-collective-fall [path]
   (let [data (read-input path)
         yearsmass (->> data
@@ -177,26 +175,69 @@
                        (reduce (fn [m d]                    ;reduce into a new map and go through each col of the previous map
                                  (if (find m (:year d))     ;checks if the year from the col is in the new map
                                    (assoc m (:year d) (+ (get m (:year d)) (:mass d) ) ) ;if so then we replace the value with the same year but with a combination of both masses
-                                 (assoc m (:year d) (:mass d)))) ;add the data to the new map
+                                   (assoc m (:year d) (:mass d)))) ;add the data to the new map
                                {})
                        (sort-by val)                        ;sort by the value on each key
                        )]
-     (last yearsmass)))                                     ;return last result as that will be the biggest
+    (last yearsmass)))                                     ;return last result as that will be the biggest
 
 (println(heaviest-collective-fall "nasa.json"))
 
 ;3.	How many years since the first recorded meteorite and the last
-(defn years-since [path]
-  (let [data (read-input path)
-        years (->> data
+(defn years-between-first-and-last [path]
+  (let [years (->> (read-input path)
                    (filter #(some? (:year %)))              ;returns a sequence of maps where the keyword :Year is within the map
                    (map #(Integer/parseInt (format-date (:year %)))))] ;extracts the year and formats to year, apply parse int resulting in a sequence of intergers
     (- (apply max years) (apply min years))))               ;as we have a sequence of ints we can use apply to find the largest and smallest number
 
-(println(years-since "nasa.json"))
-;4. What meteor is the heaviest
+(println(years-between-first-and-last "nasa.json"))
 
-;5. which meteor type is the heaviest on average
+;4 Which meteorite fell closest to sheffield hallam university cantor building
+(s/def ::has-name-and-location-and-has-fell? (and (s/keys :req [::name ::geolocation ::fall]) #(= (:fall %) :Fell)))
+  ;lat: 53.378292 long:-1.466574
+
+;I wanted to find the distance between two diffrent vectors of cordinates, i came accross the haversine and vincenty formulas which could do this for me
+; after some research i found the code below on rosettacode and modified it to take two vectors of cords   https://rosettacode.org/wiki/Haversine_formula
+(defn haversine [[lon1 lat1] [lon2 lat2]].
+  (let [R 6372.8 ; kilometers
+        dlat (Math/toRadians (- lat2 lat1))
+        dlon (Math/toRadians (- lon2 lon1))
+        lat1 (Math/toRadians lat1)
+        lat2 (Math/toRadians lat2)
+        a (+ (* (Math/sin (/ dlat 2)) (Math/sin (/ dlat 2))) (* (Math/sin (/ dlon 2)) (Math/sin (/ dlon 2)) (Math/cos lat1) (Math/cos lat2)))]
+    (* R 2 (Math/asin (Math/sqrt a)))))
+(defn closest-meteorite-fall-to-cantor [path]
+  (let [cantor-coordinates [-1.466574 53.378292]
+        meteorite-year-masses (->> (read-input path)
+                                   (filter #(s/conform ::has-name-and-location-and-has-fell? %)) ;uses spec to filter out data that doesnt match spec
+                                   (map #(select-keys % [:name :geolocation])) ;returns a new map only containing keywords :name and :geolocation
+                                   (reduce (fn [m d]
+                                             (let [coords (:coordinates (:geolocation d)) ;Get the vector of long and lat [10 10]
+                                                   dis (if coords
+                                                              (haversine coords cantor-coordinates)
+                                                              nil)] ;uses the haversine to work out the distance between cantor and the fall
+                                               (if dis
+                                                 (assoc m (:name d) dis)
+                                                 m)))
+                                           {})
+                                   (sort-by val)
+                                   )
+        ]
+    meteorite-year-masses))
+    (println(closest-meteorite-fall-to-cantor "nasa.json") )
+
+
+;5. How many meteorites fell in each decade and what was there adverage mass?
+
+(defn round-down-to-decade [year]
+  (* 10 (quot (parse-double year) 10)))
+
+
+(defn most-individual-meteor-falls-in-year2 [path & {:keys [start end] :or {start 0 end 2023}}]
+
+  )
+
+(println (most-individual-meteor-falls-in-year2 "nasa.json"))
 
 (defn -main []
   (let [trinary-number "112"
