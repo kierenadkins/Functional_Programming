@@ -1,5 +1,6 @@
 (ns functional-programming.core
   (:gen-class)
+  (:require [clojure.set :as set])
   (:require [clojure.spec.alpha :as s])
   (:require [clojure.data.json :as json]))
 
@@ -154,7 +155,7 @@
     (Double/parseDouble x)))
 
 ;1.	Which year saw the most individual meteor falls?
-(s/def ::keyword-year? (s/keys :req [::year]))
+(s/def ::keyword-year? (s/and (s/keys :req [::year])))
 (defn most-individual-meteor-falls-in-year [path]
 (->> (read-input path)
      (filter #(s/conform ::keyword-year? %))                            ;filters to give us a sequence of maps containing the keyword :year
@@ -198,7 +199,7 @@
 
 ;I wanted to find the distance between two diffrent vectors of cordinates, i came accross the haversine and vincenty formulas which could do this for me
 ; after some research i found the code below on rosettacode and modified it to take two vectors of cords   https://rosettacode.org/wiki/Haversine_formula
-(defn haversine [[lon1 lat1] [lon2 lat2]].
+(defn haversine [[lon1 lat1] [lon2 lat2]]
   (let [R 6372.8 ; kilometers
         dlat (Math/toRadians (- lat2 lat1))
         dlon (Math/toRadians (- lon2 lon1))
@@ -214,8 +215,8 @@
                                    (reduce (fn [m d]
                                              (let [coords (:coordinates (:geolocation d)) ;Get the vector of long and lat [10 10]
                                                    dis (if coords
-                                                              (haversine coords cantor-coordinates)
-                                                              nil)] ;uses the haversine to work out the distance between cantor and the fall
+                                                         (haversine coords cantor-coordinates)
+                                                         nil)] ;uses the haversine to work out the distance between cantor and the fall
                                                (if dis
                                                  (assoc m (:name d) dis)
                                                  m)))
@@ -224,20 +225,43 @@
                                    )
         ]
     meteorite-year-masses))
-    (println(closest-meteorite-fall-to-cantor "nasa.json") )
+(println(closest-meteorite-fall-to-cantor "nasa.json") )
 
 
 ;5. How many meteorites fell in each decade and what was there adverage mass?
 
 (defn round-down-to-decade [year]
-  (* 10 (quot (parse-double year) 10)))
+  (* 10 (quot (Integer/parseInt year) 10)))
 
+(defn most-individual-meteor-falls-in-year2 [path]
 
-(defn most-individual-meteor-falls-in-year2 [path & {:keys [start end] :or {start 0 end 2023}}]
-
+  (let [data (read-input path)
+        decade-frequences (->> data
+                               (filter #(and(s/conform ::keyword-year? %) (not (nil? (:year %)))))
+                               (map #(round-down-to-decade(format-date (get % :year))))
+                               (frequencies)
+                            )
+        decade-mass (->> data
+                         (filter #(and (some? (:year %)) (some? (:mass %)))) ;Filter all records that dont have both a year and a mass
+                         (map #(update % :year (comp round-down-to-decade format-date)))
+                         (map #(update % :mass format-mass))  ;format mass into a double
+                         (reduce (fn [m d]                    ;reduce into a new map and go through each col of the previous map
+                                   (if (find m (:year d))     ;checks if the year from the col is in the new map
+                                     (assoc m (:year d) (+ (get m (:year d)) (:mass d) ) ) ;if so then we replace the value with the same year but with a combination of both masses
+                                     (assoc m (:year d) (:mass d)))) ;add the data to the new map
+                                 {})
+                         )
+        ]
+    (into (sort-by :average-mass #(compare %2 %1)                   ;Used clojure help sheet to find out how to sort by decending order
+                   (for [[year mass] decade-mass]           ;destrucres the decade-mass collection into years and mass (goes through each one)
+                     {:year year                            ;start the creation of a new sequence of maps, binds year to key word
+                      :average-mass (/ mass (get decade-frequences year)) ;divides the mass by the frequences the year appears
+                      :frequency (get decade-frequences year)}))) ;adds the frequency to the collection (we could use this later to find the total mass for the decade)
+    )
   )
 
-(println (most-individual-meteor-falls-in-year2 "nasa.json"))
+(println(most-individual-meteor-falls-in-year2 "nasa.json"))
+
 
 (defn -main []
   (let [trinary-number "112"
