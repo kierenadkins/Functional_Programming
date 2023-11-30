@@ -1,6 +1,6 @@
 (ns functional-programming.core
   (:gen-class)
-  (:require [clojure.set :as set])
+  (:require [clojure.spec.test.alpha :as stest])
   (:require [clojure.spec.alpha :as s])
   (:require [clojure.data.json :as json]))
 
@@ -112,7 +112,7 @@
   (if (s/valid? ::rna-sequence-string? rna-sequence)         ; uses spec to check if the input in a valid string
     (let [rna-sequence (map #(apply str %) (partition 3 rna-sequence))] ;define our scope, and convert the rna into a lazyseq of codons of three characters which are converted into a string
       (loop [index 0 proteins []]                           ;we not loop though each column of the sequence and store the protein
-         (if (and  (= index (count rna-sequence)))          ;Stop condition if the index becomes larger than our sequence
+         (if (= index (count rna-sequence))          ;Stop condition if the index becomes larger than our sequence
            (lazy-seq proteins)                              ;If true return a lazyseq of our proteins
              (let [protein (convert-codon-to-protein (nth rna-sequence index))] ;Use a let to define a new scope which calls our function with the protein in index x, this scope will then handle validation and recursion
                 (if (s/valid? ::protein-not-stop-not-nil? protein) ;checks if the protein is "STOP" or "Nil" (Nil is incase we get an invalid codon)
@@ -161,7 +161,11 @@
      (frequencies)                                          ;converts back into a map using the year as a key and the amount of times it has appeared as the value
      (apply max-key val)                                    ;We then apply max-key to find the key with the highest appearance
      ))
-(println (most-individual-meteor-falls-in-year "nasa.json"))
+
+(s/fdef most-individual-meteor-falls-in-year
+        :args (s/cat :path ::path-ends-with-json-and-is-string?)
+        :ret vector?)
+(stest/instrument 'heaviest-collective-fall )
 
 ;2.	Which year saw the heaviest collective meteor fall? Continue on this
 (defn heaviest-collective-fall [path]
@@ -179,7 +183,10 @@
                        )]
     (last yearsmass)))                                     ;return last result as that will be the biggest
 
-(println(heaviest-collective-fall "nasa.json"))
+(s/fdef heaviest-collective-fall
+        :args (s/cat :path ::path-ends-with-json-and-is-string?)
+        :ret vector?)
+(stest/instrument 'heaviest-collective-fall )
 
 ;3.	How many years since the first recorded meteorite and the last
 (defn years-between-first-and-last [path]
@@ -187,7 +194,12 @@
                    (filter #(:year %))              ;returns a sequence of maps where the keyword :Year is within the map
                    (map #(Integer/parseInt (format-date (:year %)))))] ;extracts the year and formats to year, apply parse int resulting in a sequence of intergers
     (- (apply max years) (apply min years))))               ;as we have a sequence of ints we can use apply to find the largest and smallest number
-(println (years-between-first-and-last "nasa.json"))
+
+(s/fdef years-between-first-and-last
+        :args (s/cat :path ::path-ends-with-json-and-is-string?)
+        :ret int?)
+(stest/instrument 'years-between-first-and-last)
+
 ;4 Which meteorite fell closest to sheffield hallam university cantor building
   ;lat: 53.378292 long:-1.466574
 
@@ -218,7 +230,12 @@
                                    )
         ]
     (first meteorite-year-masses)))
-(println (closest-meteorite-fall-to-cantor "nasa.json"))
+
+(s/fdef closest-meteorite-fall-to-cantor
+        :args (s/cat :path ::path-ends-with-json-and-is-string?)
+        :ret vector?)
+(stest/instrument 'closest-meteorite-fall-to-cantor )
+
 ;5. How many meteorites fell in each decade and what was there adverage mass?
 
 (defn round-down-to-decade [year]
@@ -226,7 +243,6 @@
 
 (s/def ::keyword-year? (s/keys :req [::year]))
 (defn most-collective-mass-in-decades-with-frequency [path]
-
   (let [data (read-input path)
         decade-frequences (->> data
                                (filter #(and(s/conform ::keyword-year? %) (not (nil? (:year %)))))
@@ -250,15 +266,17 @@
                       :average-mass (/ mass (get decade-frequences year)) ;divides the mass by the frequences the year appears
                       :frequency (get decade-frequences year)}))) ;adds the frequency to the collection (we could use this later to find the total mass for the decade)
     ))
-
   )
-(println (most-collective-mass-in-decades-with-frequency "nasa.json"))
-
-
+(s/fdef most-collective-mass-in-decades-with-frequency
+        :args (s/cat :path ::path-ends-with-json-and-is-string?)
+        :ret vector?)
+(stest/instrument 'most-collective-mass-in-decades-with-frequency )
 
 (defn -main []
   (let [trinary-number "112"
-        decimal-equivalent (convert-trinary-to-decimal-recursive trinary-number)]
-    (println (str "The decimal equivalent of " trinary-number " is " decimal-equivalent)))
-  (println(convert-rna-sequence-to-amino-acids2 "AUGUUUUAA" ))
+   decimal-equivalent (convert-trinary-to-decimal-recursive trinary-number)]
+  (println (str "The decimal equivalent of " trinary-number " is " decimal-equivalent)))
+  (println (convert-rna-sequence-to-amino-acids2 "AUGUUUUAA"))
   )
+;(println (s/valid? even? 999))                              ;returns true or false
+;(println (s/conform even? 999))                            ;returns 999 or :clojure.spec.alpha/invalid
