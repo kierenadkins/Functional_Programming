@@ -127,11 +127,11 @@
 
 ;task 3
 
-(s/def ::path-matches-pattern-and-is-string? (s/and #(string? %) #(re-matches #"(.*?)\.(json)$" %)))
+(s/def ::path-ends-with-json-and-is-string? (s/and #(string? %) #(.endsWith % ".json")))
 ;https://stackoverflow.com/questions/45854023/add-values-of-similar-json
 ;Figure out how to read from a file and parse it
 (defn read-input [path]
-  ;{:pre [(::path-matches-pattern-and-is-string? path)]}
+  {:pre [(s/valid? ::path-ends-with-json-and-is-string? path)]}
   (try
     (json/read-str (slurp path)
                    :key-fn keyword
@@ -143,41 +143,40 @@
       (println "Exception caught:" (.getMessage e)))))
 
 ;https://stackoverflow.com/questions/18125045/clojure-parse-string-to-date
-(defn format-date [x]
-    (when x                                              ;Ensures date is not nil
+(defn format-date [year]
+    (when year                                              ;Ensures date is not nil
       (.format
         (java.text.SimpleDateFormat. "yyyy")
         (.parse
-          (java.text.SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS") x))))
+          (java.text.SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSS") year))))
 
-(defn format-mass [x]
-  (when x                                              ;Ensures date is not nil
-    (Double/parseDouble x)))
+(defn format-mass [mass]
+  (when mass                                              ;Ensures date is not nil
+    (Double/parseDouble mass)))
 
 ;1.	Which year saw the most individual meteor falls?
-(s/def ::keyword-year? (s/and (s/keys :req [::year])))
+(s/def ::keyword-year? (s/keys :req [::year]))
 (defn most-individual-meteor-falls-in-year [path]
 (->> (read-input path)
-     (filter #(s/conform ::keyword-year? %))                            ;filters to give us a sequence of maps containing the keyword :year
      (map #(format-date (get % :year)))                     ;coverts into lazy sequence of years
      (frequencies)                                          ;converts back into a map using the year as a key and the amount of times it has appeared as the value
      (apply max-key val)                                    ;We then apply max-key to find the key with the highest appearance
      ))
-
 (println (most-individual-meteor-falls-in-year "nasa.json"))
 
 ;2.	Which year saw the heaviest collective meteor fall? Continue on this
+
 (defn heaviest-collective-fall [path]
   (let [data (read-input path)
         yearsmass (->> data
-                       (filter #(and (some? (:year %)) (some? (:mass %)))) ;Filter all records that dont have both a year and a mass
+                       (filter #(and (:year %) (:mass %))) ;Filter all records that dont have both a year and a mass
                        (map #(update % :year format-date))  ;format date into a year
                        (map #(update % :mass format-mass))  ;format mass into a double
                        (reduce (fn [m d]                    ;reduce into a new map and go through each col of the previous map
-                                 (if (find m (:year d))     ;checks if the year from the col is in the new map
-                                   (assoc m (:year d) (+ (get m (:year d)) (:mass d) ) ) ;if so then we replace the value with the same year but with a combination of both masses
-                                   (assoc m (:year d) (:mass d)))) ;add the data to the new map
-                               {})
+                       (if (find m (:year d))     ;checks if the year from the col is in the new map
+                       (assoc m (:year d) (+ (get m (:year d)) (:mass d))) ;if so then we replace the value with the same year but with a combination of both masses
+                        (assoc m (:year d) (:mass d)))) ;add the data to the new map
+                        {})
                        (sort-by val)                        ;sort by the value on each key
                        )]
     (last yearsmass)))                                     ;return last result as that will be the biggest
@@ -187,14 +186,11 @@
 ;3.	How many years since the first recorded meteorite and the last
 (defn years-between-first-and-last [path]
   (let [years (->> (read-input path)
-                   (filter #(some? (:year %)))              ;returns a sequence of maps where the keyword :Year is within the map
+                   (filter #(:year %))              ;returns a sequence of maps where the keyword :Year is within the map
                    (map #(Integer/parseInt (format-date (:year %)))))] ;extracts the year and formats to year, apply parse int resulting in a sequence of intergers
     (- (apply max years) (apply min years))))               ;as we have a sequence of ints we can use apply to find the largest and smallest number
-
-(println(years-between-first-and-last "nasa.json"))
-
+(println (years-between-first-and-last "nasa.json"))
 ;4 Which meteorite fell closest to sheffield hallam university cantor building
-(s/def ::has-name-and-location-and-has-fell? (and (s/keys :req [::name ::geolocation ::fall]) #(= (:fall %) :Fell)))
   ;lat: 53.378292 long:-1.466574
 
 ;I wanted to find the distance between two diffrent vectors of cordinates, i came accross the haversine and vincenty formulas which could do this for me
@@ -210,7 +206,6 @@
 (defn closest-meteorite-fall-to-cantor [path]
   (let [cantor-coordinates [-1.466574 53.378292]
         meteorite-year-masses (->> (read-input path)
-                                   (filter #(s/conform ::has-name-and-location-and-has-fell? %)) ;uses spec to filter out data that doesnt match spec
                                    (map #(select-keys % [:name :geolocation])) ;returns a new map only containing keywords :name and :geolocation
                                    (reduce (fn [m d]
                                              (let [coords (:coordinates (:geolocation d)) ;Get the vector of long and lat [10 10]
@@ -225,9 +220,7 @@
                                    )
         ]
     meteorite-year-masses))
-(println(closest-meteorite-fall-to-cantor "nasa.json") )
-
-
+(println (closest-meteorite-fall-to-cantor "nasa.json"))
 ;5. How many meteorites fell in each decade and what was there adverage mass?
 
 (defn round-down-to-decade [year]
@@ -259,8 +252,8 @@
                       :frequency (get decade-frequences year)}))) ;adds the frequency to the collection (we could use this later to find the total mass for the decade)
     )
   )
+(println (most-individual-meteor-falls-in-year2 "nasa.json"))
 
-(println(most-individual-meteor-falls-in-year2 "nasa.json"))
 
 
 (defn -main []
