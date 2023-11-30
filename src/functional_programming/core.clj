@@ -155,7 +155,6 @@
     (Double/parseDouble mass)))
 
 ;1.	Which year saw the most individual meteor falls?
-(s/def ::keyword-year? (s/keys :req [::year]))
 (defn most-individual-meteor-falls-in-year [path]
 (->> (read-input path)
      (map #(format-date (get % :year)))                     ;coverts into lazy sequence of years
@@ -165,7 +164,6 @@
 (println (most-individual-meteor-falls-in-year "nasa.json"))
 
 ;2.	Which year saw the heaviest collective meteor fall? Continue on this
-
 (defn heaviest-collective-fall [path]
   (let [data (read-input path)
         yearsmass (->> data
@@ -219,14 +217,15 @@
                                    (sort-by val)
                                    )
         ]
-    meteorite-year-masses))
+    (first meteorite-year-masses)))
 (println (closest-meteorite-fall-to-cantor "nasa.json"))
 ;5. How many meteorites fell in each decade and what was there adverage mass?
 
 (defn round-down-to-decade [year]
   (* 10 (quot (Integer/parseInt year) 10)))
 
-(defn most-individual-meteor-falls-in-year2 [path]
+(s/def ::keyword-year? (s/keys :req [::year]))
+(defn most-collective-mass-in-decades-with-frequency [path]
 
   (let [data (read-input path)
         decade-frequences (->> data
@@ -245,14 +244,15 @@
                                  {})
                          )
         ]
-    (into (sort-by :average-mass #(compare %2 %1)                   ;Used clojure help sheet to find out how to sort by decending order
+    (first (into (sort-by :average-mass #(compare %2 %1)                   ;Used clojure help sheet to find out how to sort by decending order
                    (for [[year mass] decade-mass]           ;destrucres the decade-mass collection into years and mass (goes through each one)
                      {:year year                            ;start the creation of a new sequence of maps, binds year to key word
                       :average-mass (/ mass (get decade-frequences year)) ;divides the mass by the frequences the year appears
                       :frequency (get decade-frequences year)}))) ;adds the frequency to the collection (we could use this later to find the total mass for the decade)
-    )
+    ))
+
   )
-(println (most-individual-meteor-falls-in-year2 "nasa.json"))
+(println (most-collective-mass-in-decades-with-frequency "nasa.json"))
 
 
 

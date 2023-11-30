@@ -155,16 +155,42 @@
     (is (heaviest-collective-fall "testData.json") vector?))
   (testing "Function returns a vector using real data"
     (is (heaviest-collective-fall "nasa.json") vector?)))
-
 (deftest test-years-between-first-and-last
   (testing "The amount of years between earilest recording and latest using test data"
-    (is (= (years-between-first-and-last "testData.json") 236)))
+    (is (= (years-between-first-and-last "testData.json") 257)))
   (testing "The amount of years between earilest recording and latest using real data"
     (is (= (years-between-first-and-last "nasa.json") 1152)))
   (testing "Function returns a int using test data"
     (is (years-between-first-and-last "testData.json") int?))
   (testing "Function returns a int using real data"
     (is (years-between-first-and-last "nasa.json") int?)))
+
+(deftest test-closest-meteorite-fall-to-cantor
+  (testing "Which metorite fell closest to cantor using the real data "
+    (is (= (closest-meteorite-fall-to-cantor "nasa.json") ["Appley Bridge" 85.8277310701543])))
+  (testing "Which metorite fell closest to cantor using the real data "
+    (is (= (closest-meteorite-fall-to-cantor "testData.json") ["Fake-Collegiate-Destroyer" 1.788606846923771]))) ;Oh no!
+  (testing "Function returns a vector using test data"
+    (is (closest-meteorite-fall-to-cantor "testData.json") vector?))
+  (testing "Function returns a vector using real data"
+    (is (closest-meteorite-fall-to-cantor "nasa.json") vector?))
+  )
+
+(deftest test-most-collective-mass-in-decades-with-frequency
+  (testing "Most heaviest collective falling in decade using test data"
+    (is (= (most-collective-mass-in-decades-with-frequency "testData.json") {:average-mass 37333.333333333336
+                                                                             :frequency    3
+                                                                             :year         1980})))
+  (testing "Most heaviest collective falling in decade using real data"
+    (is (= (most-collective-mass-in-decades-with-frequency "nasa.json") {:average-mass 465829.28301886795
+                                                                         :frequency    53
+                                                                         :year         1940})))
+  (testing "Function returns a vector using test data"
+    (is (most-collective-mass-in-decades-with-frequency "testData.json") vector?))
+  (testing "Function returns a vector using real data"
+    (is (most-collective-mass-in-decades-with-frequency "nasa.json") vector?))
+  )
+
 
 
 
