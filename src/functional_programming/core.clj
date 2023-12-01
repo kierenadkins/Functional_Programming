@@ -93,8 +93,8 @@
 ;to apply the function "apply str" to each col of the lazy sequence to turn the 3 characters into a codon
 ;we then use another map function to apply the convert-codon-to-protein to each codon in the lazy sequence
 ;finally we use the take-while to only return the lazy sequence which contains codons until the "Stop"
-;I used this https://stackoverflow.com/questions/38633649/how-to-split-string-at-fixed-numbers-of-character-in-clojure to figure out how to split the string and apply string
-
+;I used this https://stackoverflow.com/questions/38633649/how-to-split-string-at-fixed-numbers-of-character-in-clojure to figure out how to split the string and apply string which lead me to find the partition key in the clojure docs so i wouldnt need to use partition-all and risk having a remainder
+;i did a second version of this program as i felt like i used quite alot from stack overflow
 (defn convert-rna-sequence-to-amino-acids [rna-sequence]
   ;Equivalent to (map #(convert-codon-to-protein %) (map #(apply str %) (partition 3 rna)))
   (if (s/valid? ::rna-sequence-string? rna-sequence)
@@ -177,8 +177,10 @@
   (let [data (read-input path)
         yearsmass (->> data
                        (filter #(and (s/valid? ::year-keyword-checks (:year %)) (s/valid? ::mass-keyword-checks (:mass %)))) ;Filter all records that dont have both a year and a mass
-                       (map #(update % :year format-date))  ;format date into a year
-                       (map #(update % :mass format-mass))  ;format mass into a double
+                       (map (fn [lazy-sequence]             ;creates a anonymous function that will deal with formatting data
+                              (-> lazy-sequence ;use thread-first to pass in previous expression
+                                  (update :year format-date) ;format date into a "yyyy"
+                                  (update :mass format-mass)))) ;format into double
                        (reduce (fn [m d]                    ;reduce into a new map and go through each col of the previous map
                        (if (find m (:year d))     ;checks if the year from the col is in the new map
                         (assoc m (:year d) (+ (get m (:year d)) (:mass d))) ;if so then we replace the value with the same year but with a combination of both masses
@@ -255,8 +257,10 @@
                             )
         decade-mass (->> data
                          (filter #(and (s/valid? ::year-keyword-checks (:year %)) (s/valid? ::mass-keyword-checks (:mass %)))) ;Filter all records that dont have both a year and a mass
-                         (map #(update % :year (comp round-down-to-decade format-date)))
-                         (map #(update % :mass format-mass))  ;format mass into a double
+                         (map (fn [lazy-sequence]             ;creates a anonymous function that will deal with formatting data
+                                (-> lazy-sequence             ;use thread-first to pass in previous expression
+                                    (update :year (comp round-down-to-decade format-date)) ;update year into decade
+                                    (update :mass format-mass)))) ;update mass to double
                          (reduce (fn [m d]                    ;reduce into a new map and go through each col of the previous map
                                    (if (find m (:year d))     ;checks if the year from the col is in the new map
                                      (assoc m (:year d) (+ (get m (:year d)) (:mass d) ) ) ;if so then we replace the value with the same year but with a combination of both masses
@@ -271,6 +275,7 @@
                       :frequency (get decade-frequences year)}))) ;adds the frequency to the collection (we could use this later to find the total mass for the decade)
     ))
   )
+
 (s/fdef most-collective-mass-in-decades-with-frequency
         :args (s/cat :path ::path-ends-with-json-and-is-string?)
         :ret vector?)
