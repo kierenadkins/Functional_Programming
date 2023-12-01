@@ -93,18 +93,21 @@
 ;to apply the function "apply str" to each col of the lazy sequence to turn the 3 characters into a codon
 ;we then use another map function to apply the convert-codon-to-protein to each codon in the lazy sequence
 ;finally we use the take-while to only return the lazy sequence which contains codons until the "Stop"
+;I used this https://stackoverflow.com/questions/38633649/how-to-split-string-at-fixed-numbers-of-character-in-clojure to figure out how to split the string and apply string
+
 (defn convert-rna-sequence-to-amino-acids [rna-sequence]
   ;Equivalent to (map #(convert-codon-to-protein %) (map #(apply str %) (partition 3 rna)))
   (if (s/valid? ::rna-sequence-string? rna-sequence)
-    (let  [amino-acids ( ->> rna-sequence           ;threads the last arugmenet to each function
-                      (partition 3) ;splits the rna string into a lazy sequence of characters eg (A U G) (A U G)
-                      (map #(apply str %))  ;applies the fn "apply" onto the lazy sequence to create a new lazy sequence of strings ("AUG") ("AUG")
-                      (map #(convert-codon-to-protein %)))] ;applies the fn convert-codon-to-protein which returns the proteins
+    (let  [amino-acids (->> rna-sequence                    ;threads the last arugmenet to each function
+                            (partition 3)                   ;splits the rna string into a lazy sequence of characters eg (A U G) (A U G)
+                            (map (fn [char-sequence]        ;sets up a anonymous functions to loop around each lazy col of chars
+                                   (convert-codon-to-protein (apply str char-sequence)))) ;we then apply the str to the col and pass into our convert-codon-to-protein function
+                                   )]
       (take-while #(s/valid? ::protein-not-stop-not-nil? %) amino-acids) ;Although not a complete copy, i got this code "Take-While" from https://stackoverflow.com/questions/11866446/how-to-stop-iterating-a-sequence-when-a-condition-is-met and used the clojure cheatsheet to further understand how it works and apply it to this program alongside adding spec/5
       )
     '()                                                     ; this may not be the best way of returning a empty sequence
+    )
   )
-)
 
 ;Task 2 version 2
 ;I wanted to explore the use of looping and recuring.
@@ -168,15 +171,17 @@
 (stest/instrument 'heaviest-collective-fall )
 
 ;2.	Which year saw the heaviest collective meteor fall? Continue on this
+(s/def ::year-keyword-checks (s/and #(string? %) #(not= nil %)))
+(s/def ::mass-keyword-checks (s/and #(string? %) #(not= nil %)))
 (defn heaviest-collective-fall [path]
   (let [data (read-input path)
         yearsmass (->> data
-                       (filter #(and (:year %) (:mass %))) ;Filter all records that dont have both a year and a mass
+                       (filter #(and (s/valid? ::year-keyword-checks (:year %)) (s/valid? ::mass-keyword-checks (:mass %)))) ;Filter all records that dont have both a year and a mass
                        (map #(update % :year format-date))  ;format date into a year
                        (map #(update % :mass format-mass))  ;format mass into a double
                        (reduce (fn [m d]                    ;reduce into a new map and go through each col of the previous map
                        (if (find m (:year d))     ;checks if the year from the col is in the new map
-                       (assoc m (:year d) (+ (get m (:year d)) (:mass d))) ;if so then we replace the value with the same year but with a combination of both masses
+                        (assoc m (:year d) (+ (get m (:year d)) (:mass d))) ;if so then we replace the value with the same year but with a combination of both masses
                         (assoc m (:year d) (:mass d)))) ;add the data to the new map
                         {})
                        (sort-by val)                        ;sort by the value on each key
@@ -191,7 +196,7 @@
 ;3.	How many years since the first recorded meteorite and the last
 (defn years-between-first-and-last [path]
   (let [years (->> (read-input path)
-                   (filter #(:year %))              ;returns a sequence of maps where the keyword :Year is within the map
+                   (filter #(s/valid? ::year-keyword-checks (:year %)))              ;returns a sequence of maps where the keyword :Year is within the map
                    (map #(Integer/parseInt (format-date (:year %)))))] ;extracts the year and formats to year, apply parse int resulting in a sequence of intergers
     (- (apply max years) (apply min years))))               ;as we have a sequence of ints we can use apply to find the largest and smallest number
 
@@ -223,7 +228,7 @@
                                                          (haversine coords cantor-coordinates)
                                                          nil)] ;uses the haversine to work out the distance between cantor and the fall
                                                (if dis
-                                                 (assoc m (:name d) dis)
+                                                 (assoc m (:name d) dis) ;if dis is not nil then we can assoc it to the map
                                                  m)))
                                            {})
                                    (sort-by val)
@@ -241,16 +246,15 @@
 (defn round-down-to-decade [year]
   (* 10 (quot (Integer/parseInt year) 10)))
 
-(s/def ::keyword-year? (s/keys :req [::year]))
 (defn most-collective-mass-in-decades-with-frequency [path]
   (let [data (read-input path)
         decade-frequences (->> data
-                               (filter #(and(s/conform ::keyword-year? %) (not (nil? (:year %)))))
+                               (filter #(and (s/valid? ::year-keyword-checks (:year %)) (s/valid? ::year-keyword-checks (:year %))))
                                (map #(round-down-to-decade(format-date (get % :year))))
                                (frequencies)
                             )
         decade-mass (->> data
-                         (filter #(and (some? (:year %)) (some? (:mass %)))) ;Filter all records that dont have both a year and a mass
+                         (filter #(and (s/valid? ::year-keyword-checks (:year %)) (s/valid? ::mass-keyword-checks (:mass %)))) ;Filter all records that dont have both a year and a mass
                          (map #(update % :year (comp round-down-to-decade format-date)))
                          (map #(update % :mass format-mass))  ;format mass into a double
                          (reduce (fn [m d]                    ;reduce into a new map and go through each col of the previous map
@@ -276,7 +280,7 @@
   (let [trinary-number "112"
    decimal-equivalent (convert-trinary-to-decimal-recursive trinary-number)]
   (println (str "The decimal equivalent of " trinary-number " is " decimal-equivalent)))
-  (println (convert-rna-sequence-to-amino-acids2 "AUGUUUUAA"))
+  (println (convert-rna-sequence-to-amino-acids "AUGUUUUAA"))
   )
 ;(println (s/valid? even? 999))                              ;returns true or false
 ;(println (s/conform even? 999))                            ;returns 999 or :clojure.spec.alpha/invalid
