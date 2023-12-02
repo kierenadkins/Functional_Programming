@@ -146,7 +146,7 @@
     (catch Exception e
       (println "Exception caught:" (.getMessage e)))))
 
-;https://stackoverflow.com/questions/18125045/clojure-parse-string-to-date
+;i got the year format date code form here https://stackoverflow.com/questions/18125045/clojure-parse-string-to-date
 (defn format-date [year]
     (when year                                              ;Ensures date is not nil
       (.format
@@ -159,6 +159,7 @@
     (Double/parseDouble mass)))
 
 ;1.	Which year saw the most individual meteor falls?
+
 (s/def ::contains-year-as-string-and-frequency-as-int? (s/cat :year string? :frequency int?))
 (defn most-individual-meteor-falls-in-year [path]
   {:pre [(s/valid? ::path-ends-with-json-and-is-string? path)]
@@ -166,10 +167,11 @@
 (->> (read-input path)
      (map #(format-date (get % :year)))                     ;coverts into lazy sequence of years
      (frequencies)                                          ;converts back into a map using the year as a key and the amount of times it has appeared as the value
-     (apply max-key val)                                    ;We then apply max-key to find the key with the highest appearance
+     (apply max-key val)                                    ;Here we use the higher-order function which then uses two higher order fuctions that use our threaded value to find the highest key in map (https://clojuredocs.org/clojure.core/max-key a example can be seen here in the clojure cheat sheet)
      ))
 
 ;2.	Which year saw the heaviest collective meteor fall? Continue on this
+
 (s/def ::year-keyword-checks (s/and #(string? %) #(not= nil %)))
 (s/def ::mass-keyword-checks (s/and #(string? %) #(not= nil %)))
 
