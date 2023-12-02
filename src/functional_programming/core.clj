@@ -96,7 +96,6 @@
 ;I used this https://stackoverflow.com/questions/38633649/how-to-split-string-at-fixed-numbers-of-character-in-clojure to figure out how to split the string and apply string which lead me to find the partition key in the clojure docs so i wouldnt need to use partition-all and risk having a remainder
 ;i did a second version of this program as i felt like i used quite alot from stack overflow
 (defn convert-rna-sequence-to-amino-acids [rna-sequence]
-  ;Equivalent to (map #(convert-codon-to-protein %) (map #(apply str %) (partition 3 rna)))
   (if (s/valid? ::rna-sequence-string? rna-sequence)
     (let  [amino-acids (->> rna-sequence                    ;threads the last arugmenet to each function
                             (partition 3)                   ;splits the rna string into a lazy sequence of characters eg (A U G) (A U G)
@@ -110,7 +109,7 @@
   )
 
 ;Task 2 version 2
-;I wanted to explore the use of looping and recuring.
+;I wanted to explore the use of looping and recuring for this task.
 (defn convert-rna-sequence-to-amino-acids2 [rna-sequence]
   (if (s/valid? ::rna-sequence-string? rna-sequence)         ; uses spec to check if the input in a valid string
     (let [rna-sequence (map #(apply str %) (partition 3 rna-sequence))] ;define our scope, and convert the rna into a lazyseq of codons of three characters which are converted into a string
@@ -120,7 +119,9 @@
              (let [protein (convert-codon-to-protein (nth rna-sequence index))] ;Use a let to define a new scope which calls our function with the protein in index x, this scope will then handle validation and recursion
                 (if (s/valid? ::protein-not-stop-not-nil? protein) ;checks if the protein is "STOP" or "Nil" (Nil is incase we get an invalid codon)
                   (recur (inc index) (conj proteins (convert-codon-to-protein (nth rna-sequence index)))) ; if valid we can recur, by increasing index and adding protein to proteins
-                  (lazy-seq proteins))))))))                ;if stop or nil we can return the sequence
+                  (lazy-seq proteins))))))
+    '()                                                     ;if spec fails we can return empty sequence
+    ))                ;if stop or nil we can return the sequence
 
 
 ; i wanted to see if the use of recursion always made it more effective, however in this example we can clearly see that recursion
@@ -158,57 +159,55 @@
     (Double/parseDouble mass)))
 
 ;1.	Which year saw the most individual meteor falls?
+(s/def ::contains-year-as-string-and-frequency-as-int? (s/cat :year string? :frequency int?))
 (defn most-individual-meteor-falls-in-year [path]
+  {:pre [(s/valid? ::path-ends-with-json-and-is-string? path)]
+   :post [(s/valid? ::contains-year-as-string-and-frequency-as-int? %)]}
 (->> (read-input path)
      (map #(format-date (get % :year)))                     ;coverts into lazy sequence of years
      (frequencies)                                          ;converts back into a map using the year as a key and the amount of times it has appeared as the value
      (apply max-key val)                                    ;We then apply max-key to find the key with the highest appearance
      ))
 
-(s/fdef most-individual-meteor-falls-in-year
-        :args (s/cat :path ::path-ends-with-json-and-is-string?)
-        :ret vector?)
-(stest/instrument 'heaviest-collective-fall )
-
 ;2.	Which year saw the heaviest collective meteor fall? Continue on this
 (s/def ::year-keyword-checks (s/and #(string? %) #(not= nil %)))
 (s/def ::mass-keyword-checks (s/and #(string? %) #(not= nil %)))
+
+(s/def ::contains-year-as-string-and-mass-as-double? (s/cat :year string? :mass double?))
 (defn heaviest-collective-fall [path]
+  {:pre [(s/valid? ::path-ends-with-json-and-is-string? path)]
+   :post [(s/valid? ::contains-year-as-string-and-mass-as-double? %)]}
   (let [data (read-input path)
         yearsmass (->> data
                        (filter #(and (s/valid? ::year-keyword-checks (:year %)) (s/valid? ::mass-keyword-checks (:mass %)))) ;Filter all records that dont have both a year and a mass
                        (map (fn [lazy-sequence]             ;creates a anonymous function that will deal with formatting data
-                              (-> lazy-sequence ;use thread-first to pass in previous expression
+                              (-> lazy-sequence             ;use thread-first to pass in previous expression
                                   (update :year format-date) ;format date into a "yyyy"
                                   (update :mass format-mass)))) ;format into double
                        (reduce (fn [m d]                    ;reduce into a new map and go through each col of the previous map
-                       (if (find m (:year d))     ;checks if the year from the col is in the new map
-                        (assoc m (:year d) (+ (get m (:year d)) (:mass d))) ;if so then we replace the value with the same year but with a combination of both masses
-                        (assoc m (:year d) (:mass d)))) ;add the data to the new map
-                        {})
+                                 (if (find m (:year d))     ;checks if the year from the col is in the new map
+                                   (assoc m (:year d) (+ (get m (:year d)) (:mass d))) ;if so then we replace the value with the same year but with a combination of both masses
+                                   (assoc m (:year d) (:mass d)))) ;add the data to the new map
+                               {})
                        (sort-by val)                        ;sort by the value on each key
                        )]
-    (last yearsmass)))                                     ;return last result as that will be the biggest
-
-(s/fdef heaviest-collective-fall
-        :args (s/cat :path ::path-ends-with-json-and-is-string?)
-        :ret vector?)
-(stest/instrument 'heaviest-collective-fall )
+    (last yearsmass)
+    ))                                     ;return last result as that will be the biggest
 
 ;3.	How many years since the first recorded meteorite and the last
-(defn years-between-first-and-last [path]
-  (let [years (->> (read-input path)
-                   (filter #(s/valid? ::year-keyword-checks (:year %)))              ;returns a sequence of maps where the keyword :Year is within the map
-                   (map #(Integer/parseInt (format-date (:year %)))))] ;extracts the year and formats to year, apply parse int resulting in a sequence of intergers
-    (- (apply max years) (apply min years))))               ;as we have a sequence of ints we can use apply to find the largest and smallest number
 
-(s/fdef years-between-first-and-last
-        :args (s/cat :path ::path-ends-with-json-and-is-string?)
-        :ret int?)
-(stest/instrument 'years-between-first-and-last)
+(defn years-between-first-and-last [path]
+  {:pre [(s/valid? ::path-ends-with-json-and-is-string? path)]
+   :post [(s/valid? int? %)]}
+  (let [years (->> (read-input path)
+                   (filter #(s/valid? ::year-keyword-checks (:year %))) ;returns a sequence of maps where the keyword :Year is within the map
+                   (map #(Integer/parseInt (format-date (:year %)))))] ;extracts the year and formats to year, apply parse int resulting in a sequence of intergers
+    (- (apply max years) (apply min years))
+    ))               ;as we have a sequence of ints we can use apply to find the largest and smallest number
 
 ;4 Which meteorite fell closest to sheffield hallam university cantor building
   ;lat: 53.378292 long:-1.466574
+(s/def ::contrains-location-as-string-and-distance-as-double? (s/cat :location string? :value double?))
 
 ;I wanted to find the distance between two diffrent vectors of cordinates, i came accross the haversine and vincenty formulas which could do this for me
 ; after some research i found the code below on rosettacode and modified it to take two vectors of cords   https://rosettacode.org/wiki/Haversine_formula
@@ -221,6 +220,8 @@
         a (+ (* (Math/sin (/ dlat 2)) (Math/sin (/ dlat 2))) (* (Math/sin (/ dlon 2)) (Math/sin (/ dlon 2)) (Math/cos lat1) (Math/cos lat2)))]
     (* R 2 (Math/asin (Math/sqrt a)))))
 (defn closest-meteorite-fall-to-cantor [path]
+  {:pre [(s/valid? ::path-ends-with-json-and-is-string? path)]
+   :post [(s/valid? ::contrains-location-as-string-and-distance-as-double? %)]}
   (let [cantor-coordinates [-1.466574 53.378292]
         meteorite-year-masses (->> (read-input path)
                                    (map #(select-keys % [:name :geolocation])) ;returns a new map only containing keywords :name and :geolocation
@@ -236,19 +237,23 @@
                                    (sort-by val)
                                    )
         ]
-    (first meteorite-year-masses)))
-
-(s/fdef closest-meteorite-fall-to-cantor
-        :args (s/cat :path ::path-ends-with-json-and-is-string?)
-        :ret vector?)
-(stest/instrument 'closest-meteorite-fall-to-cantor )
+    (first meteorite-year-masses)
+    ))
 
 ;5. How many meteorites fell in each decade and what was there adverage mass?
-
+(s/def ::year int?)                                         ;check data types for keys
+(s/def ::average-mass double?)
+(s/def ::frequency int?)
+(s/def ::decade int?)
+(s/def ::map-return-keys (s/keys :req-un [::year ::average-mass ::frequency])) ;checks keys exist and the data is correct
+;(println (s/conform ::map-return-keys {:year 1940, :average-mass 465829.28301886795, :frequency 53}))
 (defn round-down-to-decade [year]
-  (* 10 (quot (Integer/parseInt year) 10)))
+  (s/conform ::decade (* 10 (quot (Integer/parseInt year) 10))))
 
 (defn most-collective-mass-in-decades-with-frequency [path]
+  {:pre [(s/valid? ::path-ends-with-json-and-is-string? path)]
+   :post [(s/valid? map? %)]}
+
   (let [data (read-input path)
         decade-frequences (->> data
                                (filter #(and (s/valid? ::year-keyword-checks (:year %)) (s/valid? ::year-keyword-checks (:year %))))
@@ -268,17 +273,18 @@
                                  {})
                          )
         ]
-    (first (into (sort-by :average-mass #(compare %2 %1)                   ;Used clojure help sheet to find out how to sort by decending order
+    ;ensures that the return value confroms to the intended return
+    (s/conform ::map-return-keys (first (into (sort-by :average-mass #(compare %2 %1)                   ;Used clojure help sheet to find out how to sort by decending order
                    (for [[year mass] decade-mass]           ;destrucres the decade-mass collection into years and mass (goes through each one)
                      {:year year                            ;start the creation of a new sequence of maps, binds year to key word
                       :average-mass (/ mass (get decade-frequences year)) ;divides the mass by the frequences the year appears
-                      :frequency (get decade-frequences year)}))) ;adds the frequency to the collection (we could use this later to find the total mass for the decade)
+                      :frequency (get decade-frequences year)})))) ;adds the frequency to the collection (we could use this later to find the total mass for the decade)
     ))
   )
 
 (s/fdef most-collective-mass-in-decades-with-frequency
         :args (s/cat :path ::path-ends-with-json-and-is-string?)
-        :ret vector?)
+        :ret map?)
 (stest/instrument 'most-collective-mass-in-decades-with-frequency )
 
 (defn -main []
@@ -287,5 +293,6 @@
   (println (str "The decimal equivalent of " trinary-number " is " decimal-equivalent)))
   (println (convert-rna-sequence-to-amino-acids "AUGUUUUAA"))
   )
+
 ;(println (s/valid? even? 999))                              ;returns true or false
 ;(println (s/conform even? 999))                            ;returns 999 or :clojure.spec.alpha/invalid

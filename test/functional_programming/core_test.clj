@@ -128,11 +128,50 @@
   (is (= '() (convert-rna-sequence-to-amino-acids "hdbshdbdshdbshdsbhdsbsdhdsbhdsbh")))
   )
 
+(deftest test_convert-rna-sequence-to-amino-acids
+  (testing "Simple Conversions")
+  ;Valid conversions should always return a lazy sequence of proteins
+  (is (= '("Methionine") (convert-rna-sequence-to-amino-acids2 "AUG")))
+  (is (= '("Phenylalanine") (convert-rna-sequence-to-amino-acids2 "UUU")))
+  (is (= '("Phenylalanine") (convert-rna-sequence-to-amino-acids2 "UUC")))
+  (is (= '("Leucine") (convert-rna-sequence-to-amino-acids2 "UUA")))
+  (is (= '("Leucine") (convert-rna-sequence-to-amino-acids2 "UUG")))
+  (is (= '("Serine") (convert-rna-sequence-to-amino-acids2 "UCU")))
+  (is (= '("Serine") (convert-rna-sequence-to-amino-acids2 "UCC")))
+  (is (= '("Serine") (convert-rna-sequence-to-amino-acids2 "UCA")))
+  (is (= '("Serine") (convert-rna-sequence-to-amino-acids2 "UCG")))
+  (is (= '("Tyrosine") (convert-rna-sequence-to-amino-acids2 "UAU")))
+  (is (= '("Tyrosine")(convert-rna-sequence-to-amino-acids2 "UAC")))
+  (is (= '("Cysteine") (convert-rna-sequence-to-amino-acids2 "UGU")))
+  (is (= '("Cysteine") (convert-rna-sequence-to-amino-acids2 "UGC")))
+  (is (= '("Tryptophan") (convert-rna-sequence-to-amino-acids2 "UGG")))
+  (is (= '() (convert-rna-sequence-to-amino-acids2 "UAA")))
+  (is (= '() (convert-rna-sequence-to-amino-acids2 "UAG")))
+  (is (= '() (convert-rna-sequence-to-amino-acids2 "UGA")))
+  (testing "Complex Proteins")
+  (is (= '("Methionine" "Phenylalanine" "Tryptophan") (convert-rna-sequence-to-amino-acids2 "AUGUUUUGG")))
+  (is (= '() (convert-rna-sequence-to-amino-acids2 "UAGUGG")))
+  (is (= '("Tryptophan") (convert-rna-sequence-to-amino-acids2 "UGGUAG")))
+  (is (= '("Methionine" "Phenylalanine") (convert-rna-sequence-to-amino-acids2 "AUGUUUUAA")))
+  (is (= '("Tryptophan") (convert-rna-sequence-to-amino-acids2 "UGGUAGUGG")))
+  (testing "Will Return A Lazy Sequence")
+  (is true (instance? LazySeq (convert-rna-sequence-to-amino-acids2 "AUG")))
+  (is true (instance? LazySeq (convert-rna-sequence-to-amino-acids2 "UAA")))
+  (is true (instance? LazySeq (convert-rna-sequence-to-amino-acids2 "AUGUUUUGG")))
+  (testing "Invalid Types")
+  ;should always return a empty lazy seq
+  (is (= '() (convert-rna-sequence-to-amino-acids2 1)))
+  (is (= '() (convert-rna-sequence-to-amino-acids2 1.000)))
+  (is (= '() (convert-rna-sequence-to-amino-acids2 'a')))
+  (is (= '() (convert-rna-sequence-to-amino-acids2 (vector [1 2 3 4]))))
+  (is (= '() (convert-rna-sequence-to-amino-acids2 "hdbshdbdshdbshdsbhdsbsdhdsbhdsbh")))
+  )
+
 (deftest test-read-input
   (testing "Valid JSON file"
     (is (not (nil? (read-input "testData.json")))))
   (testing "Invalid Json File"
-    ;i couldnt find a way to do this
+    ;i couldnt find a way to do this but have specs in the main file to handle this
     )
   )
 
@@ -186,9 +225,9 @@
                                                                          :frequency    53
                                                                          :year         1940})))
   (testing "Function returns a vector using test data"
-    (is (most-collective-mass-in-decades-with-frequency "testData.json") vector?))
+    (is (most-collective-mass-in-decades-with-frequency "testData.json") map?))
   (testing "Function returns a vector using real data"
-    (is (most-collective-mass-in-decades-with-frequency "nasa.json") vector?))
+    (is (most-collective-mass-in-decades-with-frequency "nasa.json") map?))
   )
 
 
