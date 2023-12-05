@@ -1,6 +1,5 @@
 (ns functional-programming.core
   (:gen-class)
-  (:require [clojure.spec.test.alpha :as stest])
   (:require [clojure.spec.alpha :as s])
   (:require [clojure.data.json :as json]))
 
@@ -87,7 +86,7 @@
 
 ;specifies a protein that is not equal to "STOP" or nil
 (s/def ::protein-not-stop-not-nil? (s/and #(not= "STOP" %) #(not= nil %)))
-(s/def ::rna-sequence-string? string?)
+(s/def ::rna-sequence-string-and-contains-multiple-of-three-characters? (s/and string? #(= 0 (mod (count %) 3))))
 
 ;This function effectively splits the rna-sequence into a lazy sequence of characters, before using the map function
 ;to apply the function "apply str" to each col of the lazy sequence to turn the 3 characters into a codon
@@ -96,7 +95,7 @@
 ;I used this https://stackoverflow.com/questions/38633649/how-to-split-string-at-fixed-numbers-of-character-in-clojure to figure out how to split the string and apply string which lead me to find the partition key in the clojure docs so i wouldnt need to use partition-all and risk having a remainder
 ;i did a second version of this program as i felt like i used quite alot from stack overflow
 (defn convert-rna-sequence-to-amino-acids [rna-sequence]
-  (if (s/valid? ::rna-sequence-string? rna-sequence)
+  (if (s/valid? ::rna-sequence-string-and-contains-multiple-of-three-characters? rna-sequence)
     (let  [amino-acids (->> rna-sequence                    ;threads the last arugmenet to each function
                             (partition 3)                   ;splits the rna string into a lazy sequence of characters eg (A U G) (A U G)
                             (map (fn [char-sequence]        ;sets up a anonymous functions to loop around each lazy col of chars
@@ -111,14 +110,14 @@
 ;Task 2 version 2
 ;I wanted to explore the use of looping and recuring for this task.
 (defn convert-rna-sequence-to-amino-acids2 [rna-sequence]
-  (if (s/valid? ::rna-sequence-string? rna-sequence)         ; uses spec to check if the input in a valid string
+  (if (s/valid? ::rna-sequence-string-and-contains-multiple-of-three-characters? rna-sequence)         ; uses spec to check if the input in a valid string
     (let [rna-sequence (map #(apply str %) (partition 3 rna-sequence))] ;define our scope, and convert the rna into a lazyseq of codons of three characters which are converted into a string
       (loop [index 0 proteins []]                           ;we not loop though each column of the sequence and store the protein
          (if (= index (count rna-sequence))          ;Stop condition if the index becomes larger than our sequence
            (lazy-seq proteins)                              ;If true return a lazyseq of our proteins
              (let [protein (convert-codon-to-protein (nth rna-sequence index))] ;Use a let to define a new scope which calls our function with the protein in index x, this scope will then handle validation and recursion
                 (if (s/valid? ::protein-not-stop-not-nil? protein) ;checks if the protein is "STOP" or "Nil" (Nil is incase we get an invalid codon)
-                  (recur (inc index) (conj proteins (convert-codon-to-protein (nth rna-sequence index)))) ; if valid we can recur, by increasing index and adding protein to proteins
+                  (recur (inc index) (conj proteins protein)) ; if valid we can recur, by increasing index and adding protein to proteins
                   (lazy-seq proteins))))))
     '()                                                     ;if spec fails we can return empty sequence
     ))                ;if stop or nil we can return the sequence
@@ -242,6 +241,7 @@
     (first meteorite-year-masses)
     ))
 
+
 ;5. How many meteorites fell in each decade and what was there adverage mass?
 (s/def ::year int?)                                         ;check data types for keys
 (s/def ::average-mass double?)
@@ -284,16 +284,11 @@
     ))
   )
 
-(s/fdef most-collective-mass-in-decades-with-frequency
-        :args (s/cat :path ::path-ends-with-json-and-is-string?)
-        :ret map?)
-(stest/instrument 'most-collective-mass-in-decades-with-frequency )
-
 (defn -main []
   (let [trinary-number "112"
    decimal-equivalent (convert-trinary-to-decimal-recursive trinary-number)]
   (println (str "The decimal equivalent of " trinary-number " is " decimal-equivalent)))
-  (println (convert-rna-sequence-to-amino-acids "AUGUUUUAA"))
+  (println (convert-rna-sequence-to-amino-acids2 "AUGUUUUCU"))
   )
 
 ;(println (s/valid? even? 999))                              ;returns true or false
