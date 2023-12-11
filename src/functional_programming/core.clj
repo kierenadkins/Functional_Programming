@@ -254,17 +254,13 @@
 (defn closest-meteorite-fall-to-cantor-address [path]
   {:pre [(s/valid? ::path-ends-with-json-and-is-string? path)]
    :post [(s/valid? string? %)]}
-  (let [closest-meteorite-fall (closest-meteorite-fall-to-cantor path) ;uses our existing functionality to find the cloest
+  (let [closest-meteorite-fall (closest-meteorite-fall-to-cantor path) ;i could of done this logic again but i thought i might as well reuse it and apply a diffrent technique to get the data i want
         address (->> (read-input path)
-                     (filter #(= (:name %) (first closest-meteorite-fall))) ;use the filter to only show us the result with the same name
-                     (map #(reverse-geocoding (get % :reclat) (get % :reclong))) ;Pass the collection to the reverse-geocoding to find address
-                     (doall) ;https://cljs.github.io/api/cljs.core/doall#:~:text=Forces%20evaluation%20of%20a%20lazy,in%20memory%20at%20one%20time.
-                     )];I wasnt so sure why my lazy-sequence wasnt evaluating after trying countless soultions i couldnt get anything working other than the doAll which i saw on the above link.
-    (-> address
-        (first)
-        (get "results")                                     ;Uses the results keyword to get the vector of maps
-        (first)                                             ;the api gives us quite a few addresses, for the purpose of this exercise we will just take the first one
-        (get "formatted_address"))))                        ;we will then read out the data using the keyword
+                            (filter #(= (:name %) (first closest-meteorite-fall))) ;Find our cloest fall within the dataset
+                            (map #(reverse-geocoding (get % :reclat) (get % :reclong))))] ;Pass the collection to the reverse-geocoding to find address
+    (get-in (first address) ["results" 0 "formatted_address"]) ;i came across a example in https://clojuredocs.org/clojure.core/get-in where you could use get-in for nested strucutres which looked neater than my using a bunch of (gets)
+    ))
+
 
 (println (closest-meteorite-fall-to-cantor-address "testData.json"))
 
