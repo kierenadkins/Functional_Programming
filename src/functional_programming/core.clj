@@ -254,13 +254,6 @@
 (defn closest-meteorite-fall-to-cantor-address [path]
   {:pre [(s/valid? ::path-ends-with-json-and-is-string? path)]
    :post [(s/valid? string? %)]}
-
-  (let [closest-meteorite-fall ] )
-
-
-
-
-
   (let [closest-meteorite-fall (closest-meteorite-fall-to-cantor path) ;uses our existing functionality to find the cloest
         address (->> (read-input path)
                      (filter #(= (:name %) (first closest-meteorite-fall))) ;use the filter to only show us the result with the same name
