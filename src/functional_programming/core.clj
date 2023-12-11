@@ -145,6 +145,7 @@
     (catch Exception e
       (println "Exception caught:" (.getMessage e)))))
 
+
 ;i got the year format date code form here https://stackoverflow.com/questions/18125045/clojure-parse-string-to-date
 (defn format-date [year]
     (when year                                              ;Ensures date is not nil
@@ -206,8 +207,8 @@
     (- (apply max years) (apply min years))
     ))               ;as we have a sequence of ints we can use apply to find the largest and smallest number
 
-;4 Which meteorite fell closest to sheffield hallam university cantor building
-  ;lat: 53.378292 long:-1.466574
+;4a Which meteorite fell closest to sheffield hallam university cantor building
+  ;lat: 53.378292 long:-1.466574#
 (s/def ::contrains-location-as-string-and-distance-as-double? (s/cat :location string? :value double?))
 
 ;I wanted to find the distance between two diffrent vectors of cordinates, i came accross the haversine and vincenty formulas which could do this for me
@@ -241,8 +242,40 @@
     (first meteorite-year-masses)
     ))
 
+;4b What is the closest address to the closest fall to sheffield hallam university cantor building using the above function as it already does alot of the logic for us
+;This is an example of using an API within clojure! Although maybe not the most functional!
 
-;5. How many meteorites fell in each decade and what was there adverage mass?
+;Here we are using the Google api to find out the address using the coordinates
+(defn reverse-geocoding [lat lng]
+  (let [coordinates (str lat "," lng)
+        api (str "https://maps.googleapis.com/maps/api/geocode/json?latlng="coordinates"&key=AIzaSyCQduIuHYaoCzRxny2pImbzYfdkGa2FS7E")]
+    (json/read-str (slurp api))))
+
+(defn closest-meteorite-fall-to-cantor-address [path]
+  {:pre [(s/valid? ::path-ends-with-json-and-is-string? path)]
+   :post [(s/valid? string? %)]}
+
+  (let [closest-meteorite-fall ] )
+
+
+
+
+
+  (let [closest-meteorite-fall (closest-meteorite-fall-to-cantor path) ;uses our existing functionality to find the cloest
+        address (->> (read-input path)
+                     (filter #(= (:name %) (first closest-meteorite-fall))) ;use the filter to only show us the result with the same name
+                     (map #(reverse-geocoding (get % :reclat) (get % :reclong))) ;Pass the collection to the reverse-geocoding to find address
+                     (doall) ;https://cljs.github.io/api/cljs.core/doall#:~:text=Forces%20evaluation%20of%20a%20lazy,in%20memory%20at%20one%20time.
+                     )];I wasnt so sure why my lazy-sequence wasnt evaluating after trying countless soultions i couldnt get anything working other than the doAll which i saw on the above link.
+    (-> address
+        (first)
+        (get "results")                                     ;Uses the results keyword to get the vector of maps
+        (first)                                             ;the api gives us quite a few addresses, for the purpose of this exercise we will just take the first one
+        (get "formatted_address"))))                        ;we will then read out the data using the keyword
+
+(println (closest-meteorite-fall-to-cantor-address "testData.json"))
+
+;5. How many meteorites fell in each decade and what was there average mass?
 (s/def ::year int?)                                         ;check data types for keys
 (s/def ::average-mass double?)
 (s/def ::frequency int?)

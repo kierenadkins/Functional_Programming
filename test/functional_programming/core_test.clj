@@ -207,12 +207,23 @@
 (deftest test-closest-meteorite-fall-to-cantor
   (testing "Which metorite fell closest to cantor using the real data "
     (is (= (closest-meteorite-fall-to-cantor "nasa.json") ["Appley Bridge" 85.8277310701543])))
-  (testing "Which metorite fell closest to cantor using the real data "
+  (testing "Which metorite fell closest to cantor using the test data "
     (is (= (closest-meteorite-fall-to-cantor "testData.json") ["Fake-Collegiate-Destroyer" 1.788606846923771]))) ;Oh no!
   (testing "Function returns a vector using test data"
     (is (closest-meteorite-fall-to-cantor "testData.json") vector?))
   (testing "Function returns a vector using real data"
     (is (closest-meteorite-fall-to-cantor "nasa.json") vector?))
+  )
+
+(deftest test-closest-meteorite-fall-to-cantor
+  (testing "What is the address of the metorite that fell closest to cantor using the real data "
+    (is (= (closest-meteorite-fall-to-cantor-address "nasa.json") "77 Skull House Ln, Appley Bridge, Wigan WN6 9DJ, UK")))
+  (testing "What is the address of the metorite that fell closest to cantor using the test data "
+    (is (= (closest-meteorite-fall-to-cantor-address "testData.json") "College House, Broomhall, Sheffield S10 2BP, UK"))) ;Oh no!
+  (testing "Function returns a vector using test data"
+    (is (closest-meteorite-fall-to-cantor-address "testData.json") string?))
+  (testing "Function returns a vector using real data"
+    (is (closest-meteorite-fall-to-cantor-address "nasa.json") string?))
   )
 
 (deftest test-most-collective-mass-in-decades-with-frequency
