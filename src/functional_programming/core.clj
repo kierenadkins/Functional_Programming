@@ -1,7 +1,8 @@
 (ns functional-programming.core
   (:gen-class)
   (:require [clojure.spec.alpha :as s])
-  (:require [clojure.data.json :as json]))
+  (:require [clojure.data.json :as json]
+            [clojure.string :as str]))
 
 ;For the first two tasks i have done two different approaches, this was mainly for me to get a understanding of the content and to talk about
 ;in task 2, i also wanted to see which were more effective
@@ -243,7 +244,7 @@
     ))
 
 ;4b What is the closest address to the closest fall to sheffield hallam university cantor building using the above function as it already does alot of the logic for us
-;This is an example of using an API within clojure! Although maybe not the most functional!
+;This is an example of using an API within clojure! Although maybe not the most functional! I wasnt sure due to reusing the function above if this would be a valid function on its own so have labeled it 4b
 
 ;Here we are using the Google api to find out the address using the coordinates
 (defn reverse-geocoding [lat lng]
@@ -260,7 +261,6 @@
                             (map #(reverse-geocoding (get % :reclat) (get % :reclong))))] ;Pass the collection to the reverse-geocoding to find address
     (get-in (first address) ["results" 0 "formatted_address"]) ;i came across a example in https://clojuredocs.org/clojure.core/get-in where you could use get-in for nested strucutres which looked neater than my using a bunch of (gets)
     ))
-
 
 (println (closest-meteorite-fall-to-cantor-address "testData.json"))
 

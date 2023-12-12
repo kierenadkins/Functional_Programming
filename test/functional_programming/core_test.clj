@@ -240,10 +240,3 @@
   (testing "Function returns a vector using real data"
     (is (most-collective-mass-in-decades-with-frequency "nasa.json") map?))
   )
-
-
-
-
-
-
-
